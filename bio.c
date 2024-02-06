@@ -127,7 +127,7 @@ bread_wr(uint dev, uint blockno) {
   if((b->flags & B_VALID) == 0) {
     iderw(b);
   }
-  memcpy(&prior[recent_pointer], b, sizeof(struct buf));
+
         prior[recent_pointer] = *b;
         prior_blockno[recent_pointer] = b->blockno;
         recent_pointer = (recent_pointer + 1) % LOGSIZE;
