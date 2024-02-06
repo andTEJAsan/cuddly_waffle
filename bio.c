@@ -20,9 +20,10 @@
 
 #include "types.h"
 #include "defs.h"
-#include "param.h"
 #include "fs.h"
+#include "param.h"
 #include "buf.h"
+#include <string.h>
 
 struct {
   struct buf buf[NBUF];
@@ -32,8 +33,11 @@ struct {
   struct buf head;
 } bcache;
 
-void
-binit(void)
+uint recent_pointer = 0;
+struct buf prior[LOGSIZE];
+uint prior_blockno[LOGSIZE];
+
+void binit(void)
 {
   struct buf *b;
 
@@ -79,6 +83,20 @@ bget(uint dev, uint blockno)
   panic("bget: no buffers");
 }
 
+struct buf*
+get_old_buf(uint blockno){
+        for(uint i = 0 ; i < LOGSIZE; i++){
+                if(prior_blockno[i] == blockno){
+                        return &prior[i];
+                }
+        }
+        panic("Couldn't find old value of the blockno = %d\n", blockno);
+}
+
+
+
+
+
 // Return a locked buf with the contents of the indicated block.
 struct buf*
 bread(uint dev, uint blockno)
@@ -103,7 +121,17 @@ bwrite(struct buf *b)
 struct buf* 
 bread_wr(uint dev, uint blockno) {
   // IMPLEMENT YOUR CODE HERE
-  return 0;
+  struct buf *b;
+
+  b = bget(dev, blockno);
+  if((b->flags & B_VALID) == 0) {
+    iderw(b);
+  }
+  memcpy(&prior[recent_pointer], b, sizeof(struct buf));
+        prior[recent_pointer] = *b;
+        prior_blockno[recent_pointer] = b->blockno;
+        recent_pointer = (recent_pointer + 1) % LOGSIZE;
+  return b;
 }
 
 // Release a buffer.
