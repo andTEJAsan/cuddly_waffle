@@ -1,16 +1,10 @@
 # COL331 Lab 2 (Part-A): Undo Logs in xv6
-In `p12-log`, you have studied the implementation of write-ahead logging (WAL)
-with redo logs in `xv6`, which helped ensure atomicity with respect to crashes,
-and hence crash consistency.
+In `p12-log`, you have studied the implementation of write-ahead logging (WAL) with redo logs in `xv6`, which helped ensure atomicity with respect to crashes, and hence crash consistency.
 
-In this lab, you will explore another method of write ahead logging, which uses
-_undo logs_ instead of redo logs. 
+In this lab, you will explore another method of write ahead logging, which uses _undo logs_ instead of redo logs. 
 
 ## Undo Logs
-The idea of undo logs is as follows: before we write a block to the disk, we
-first log the old value of the block, and then write to the disk, and finally
-consider the transaction to be committed. In case of a crash, we simply check
-the log for uncommitted transactions, and "undo" their effect. 
+The idea of undo logs is as follows: before we write a block to the disk, we first log the old value of the block, and then write to the disk, and finally consider the transaction to be committed. In case of a crash, we simply check the log for uncommitted transactions, and "undo" their effect. 
 
 We can describe this procedure more formally using the following rules:
 
@@ -18,8 +12,7 @@ We can describe this procedure more formally using the following rules:
 To write new values `n1`, `n2` to blocks B1, B2:
 
 - Write old values `o1`, `o2` into the log
-- Start the transaction which writes log header block describing the block
-  numbers of `o1` and `o2`
+- Start the transaction which writes log header block describing the block numbers of `o1` and `o2`
 - Install the transaction: flush the values `n1` and `n2` to B1, B2 on disk 
 - Commit the transaction by clearing the log
 
@@ -29,46 +22,26 @@ Read the log header block and write the blocks in the log described in the log h
 
 We may summarize the difference between redo and undo logging via the following table: 
 
-| Status of block at time of crash  | Redo Log | Undo Log |
-| --------------------------------- | -------------| ------- |
-| Committed & written to disk       | Nothing to do | Nothing to do |
-| Committed but not written         | Redo by writing the new value in log to disk | Not possible |
-| Written but not committed         | Not possible | Undo by writing the old value in log to disk |
+| Status of block at time of crash | Redo Log | Undo Log |
+| -------- | --------| ------- |
+| Committed & written to disk  | Nothing to do | Nothing to do |
+| Committed but not written     | Redo by writing the new value in log to disk | Not possible |
+| Written but not committed     | Not possible | Undo by writing the old value in log to disk |
 | Not written and not committed     | Nothing to do | Nothing to do |
 
 ### Food for Thought
-Try to compare performance and durability of redo and undo logs. Which method
-of logging would be more efficient for an operating system? And which method
-might lose more data if we assume rest of the system design is identical. 
-If the log regions go bad then we would lose the old values.
+Try to compare performance and durability of redo and undo logs. Which method of logging would be more efficient for an operating system? And which method might lose more data if we assume rest of the system design is identical. 
 
 ## Implementation
-The implementation of undo logging will involve changes to `log.c` and `bio.c`.
-You are encouraged to read and understand `p12-log.md`, as well as how the
-buffer cache works. 
+The implementation of undo logging will involve changes to `log.c` and `bio.c`. You are encouraged to read and understand `p12-log.md`, as well as how the buffer cache works. 
 
-Note that in undo logs, we write the old value of a block to the log which
-helps us undo the operation, which may require an additional read from the
-disk.
+Note that in undo logs, we write the old value of a block to the log which helps us undo the operation, which may require an additional read from the disk.
 
+To prevent this performance hit, we cache the old value of disk whenever we perform a write. For this purpose, a new function `bread_wr` has been defined in `bio.c`, which is now called in `fs.c` wherever `bread` was called with the intention of *modifying the block*. You must provide an implementation of `bread_wr` which efficiently caches the old value in the disk, which can be later used when writing to the log. 
 
-To prevent this performance hit, we cache the old value of disk whenever we
-perform a write. For this purpose, a new function `bread_wr` has been defined
-in `bio.c`, which is now called in `fs.c` wherever `bread` was called with the
-intention of *modifying the block*. You must provide an implementation of
-`bread_wr` which efficiently caches the old value in the disk, which can be
-later used when writing to the log. 
+Finally, note that in redo logs, we write to the log lazily, i.e. the `write_log` function is called only during commit. However, instead of waiting till `commit`, we can now eagerly write to the log whenever a block is changed. Your task is to modify the code to make writes to the undo log in an eager manner.
 
-Finally, note that in redo logs, we write to the log lazily, i.e. the
-`write_log` function is called only during commit. However, instead of waiting
-till `commit`, we can now eagerly write to the log whenever a block is changed.
-Your task is to modify the code to make writes to the undo log in an eager
-manner.
-
-Note that you are strictly **not allowed** to make any changes to the `commit`
-function in `log.c`, the `main` function in `main.c`, and to any of the calls
-to `bread_wr` in `fs.c`. Apart from this, you are allowed to create new
-functions, modify existing ones, add attributes to structs, etc.  
+Note that you are strictly **not allowed** to make any changes to the `commit` function in `log.c`, the `main` function in `main.c`, and to any of the calls to `bread_wr` in `fs.c`. Apart from this, you are allowed to create new functions, modify existing ones, add attributes to structs, etc.  
 
 ## Deliverables (Tentative)
 In summary, you are required to:
@@ -90,8 +63,7 @@ entry number)
 
 ## Auto-grader
 
-Your submission will be evaluated by our autograder which is available
-[here](https://csciitd-my.sharepoint.com/:u:/g/personal/jcs222656_iitd_ac_in/EUFR-OxqFJRGrxDwG2eK8m0BPLuuo4-nQ-HH5o5_4jAzig).
+Your submission will be evaluated by our autograder which is available [here](https://csciitd-my.sharepoint.com/:u:/g/personal/jcs222656_iitd_ac_in/EUFR-OxqFJRGrxDwG2eK8m0BPLuuo4-nQ-HH5o5_4jAzig).
 
 - Download and unzip the check_scripts_lab2.zip.
 ```

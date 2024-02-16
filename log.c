@@ -4,7 +4,6 @@
 #include "fs.h"
 #include "buf.h"
 #include "logflag.h"
-#include <assert.h>
 
 // Simple logging that allows concurrent FS system calls.
 //
@@ -48,9 +47,6 @@ struct log log;
 static void recover_from_log(void);
 static void commit();
 
-uint get_prior_index(uint blockno){
-}
-
 void
 initlog(int dev)
 {
@@ -76,7 +72,6 @@ install_trans(void)
       if (tail == log.lh.n/2) panic("[UNDOLOG] Panic in install_trans type 5");
     }
     struct buf *lbuf = bread(log.dev, log.start+tail+1); // read log block
-        // blockno = log.lh.block[tail]
     struct buf *dbuf = bread(log.dev, log.lh.block[tail]); // read dst
     memmove(dbuf->data, lbuf->data, BSIZE);  // copy block to dst
     bwrite(dbuf);  // write dst to disk
@@ -92,7 +87,6 @@ read_head(void)
   struct buf *buf = bread(log.dev, log.start);
   struct logheader *lh = (struct logheader *) (buf->data);
   int i;
-        
   log.lh.n = lh->n;
   for (i = 0; i < log.lh.n; i++) {
     log.lh.block[i] = lh->block[i];
@@ -120,10 +114,10 @@ write_head(void)
 static void
 recover_from_log(void)
 {
-  read_head(); // read the log from disk to memory
-  install_trans(); //  take appropriate action modify the log
+  read_head();
+  install_trans(); // if committed, copy from log to disk
   log.lh.n = 0;
-  write_head(); // write the log to disk
+  write_head(); // clear the log
 }
 
 // called at the start of each FS system call.
@@ -177,7 +171,7 @@ commit()
 //   log_write(bp)
 //   brelse(bp)
 void
-log_write(struct buf *b) // write to log in disk , and write the new value in buffer by making it dirty
+log_write(struct buf *b)
 {
   int i;
 
@@ -188,8 +182,6 @@ log_write(struct buf *b) // write to log in disk , and write the new value in bu
     if (log.lh.block[i] == b->blockno)   // log absorbtion
       break;
   }
-        struct buf * old_b = get_old_buf(b->blockno);
-        assert(old_b->blockno == b->blockno);
   log.lh.block[i] = b->blockno;
   if (i == log.lh.n)
     log.lh.n++;

@@ -8,10 +8,8 @@ struct stat;
 void            binit(void);
 struct buf*     bread(uint, uint);
 struct buf*     bread_wr(uint, uint);
-struct buf*     get_old_buf(uint);
 void            bwrite(struct buf*);
 void            brelse(struct buf *b);
-
 
 // console.c
 void            cprintf(char*, ...);
