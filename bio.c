@@ -31,6 +31,10 @@ struct {
   // head.next is most recently used.
   struct buf head;
 } bcache;
+struct buf old;
+struct buf * get_old() {
+        return &old;
+}
 
 void
 binit(void)
@@ -84,7 +88,6 @@ struct buf*
 bread(uint dev, uint blockno)
 {
   struct buf *b;
-
   b = bget(dev, blockno);
   if((b->flags & B_VALID) == 0) {
     iderw(b);
@@ -103,6 +106,12 @@ bwrite(struct buf *b)
 struct buf* 
 bread_wr(uint dev, uint blockno) {
   // IMPLEMENT YOUR CODE HERE
+  struct buf *b;
+  b = bget(dev, blockno);
+  if((b->flags & B_VALID) == 0) {
+    iderw(b);
+  }
+        old = *b;
   return 0;
 }
 

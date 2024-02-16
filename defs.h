@@ -10,6 +10,7 @@ struct buf*     bread(uint, uint);
 struct buf*     bread_wr(uint, uint);
 void            bwrite(struct buf*);
 void            brelse(struct buf *b);
+struct buf*            get_old(); 
 
 // console.c
 void            cprintf(char*, ...);

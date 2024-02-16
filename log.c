@@ -63,6 +63,21 @@ initlog(int dev)
 
 // Copy committed blocks from log to their home location
 static void
+restore_from_log(void)
+{
+  int tail;
+
+  for (tail = 0; tail < log.lh.n; tail++) {
+        // we are supposed to write from the buffer  get the new values from cache.
+    struct buf *lbuf = bread(log.dev, log.start+tail+1); // read log block
+    struct buf *dbuf = bread(log.dev, log.lh.block[tail]); // read dst
+    memmove(dbuf->data, lbuf->data, BSIZE);  // copy block to dst
+    bwrite(dbuf);  // write dst to disk
+    brelse(lbuf);
+    brelse(dbuf);
+  }
+}
+static void
 install_trans(void)
 {
   int tail;
@@ -71,11 +86,16 @@ install_trans(void)
     if (LOG_FLAG == 5) {
       if (tail == log.lh.n/2) panic("[UNDOLOG] Panic in install_trans type 5");
     }
-    struct buf *lbuf = bread(log.dev, log.start+tail+1); // read log block
+        // we are supposed to write from the buffer  get the new values from cache.
+    //struct buf *lbuf = bread(log.dev, log.start+tail+1); // read log block
+                // This must be in the cache right now.
     struct buf *dbuf = bread(log.dev, log.lh.block[tail]); // read dst
-    memmove(dbuf->data, lbuf->data, BSIZE);  // copy block to dst
+        if(dbuf->flags & (B_DIRTY|B_VALID) != (B_DIRTY|B_VALID)){
+                        panic("Fuck what the fuck stupid ass goddamnit\n");
+                }
+    //memmove(dbuf->data, lbuf->data, BSIZE);  // copy block to dst
     bwrite(dbuf);  // write dst to disk
-    brelse(lbuf);
+    //brelse(lbuf);
     brelse(dbuf);
   }
 }
@@ -115,7 +135,7 @@ static void
 recover_from_log(void)
 {
   read_head();
-  install_trans(); // if committed, copy from log to disk
+  restore_from_log(); // if committed, copy from log to disk
   log.lh.n = 0;
   write_head(); // clear the log
 }
@@ -183,7 +203,17 @@ log_write(struct buf *b)
       break;
   }
   log.lh.block[i] = b->blockno;
-  if (i == log.lh.n)
+  if (i == log.lh.n){
     log.lh.n++;
+        log.lh.block[i] = b->blockno; 
+        }
   b->flags |= B_DIRTY; // prevent eviction
+        struct buf * old = get_old();
+        if(old->blockno != b->blockno){
+                panic("bread_wr wasnt called just before calling \n");
+        }
+        struct buf * to = bread(log.dev, log.start + i + 1);
+        memmove(to->data, old->data, BSIZE);
+        bwrite(to);
+        brelse(to);
 }
