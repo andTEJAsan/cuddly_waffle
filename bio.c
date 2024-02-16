@@ -32,6 +32,7 @@ struct {
   struct buf head;
 } bcache;
 #define OLDSZ 10
+#define NULL (void *) 0
 int ind[OLDSZ];
 int j = 0;
 struct buf old[OLDSZ];
