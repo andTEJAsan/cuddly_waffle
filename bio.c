@@ -43,6 +43,7 @@ struct buf* get_old(uint blockno) {
                 }
         }
         if(i == OLDSZ){
+                cprintf("j = %d\n", j);
                 panic("couldn't find old value\n");
         }
         return &old[i];
