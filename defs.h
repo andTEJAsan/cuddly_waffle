@@ -3,7 +3,7 @@ struct rtcdate;
 struct superblock;
 struct inode;
 struct stat;
-
+#define NULL (void *) 0
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);
