@@ -203,10 +203,8 @@ log_write(struct buf *b)
       break;
   }
   log.lh.block[i] = b->blockno;
-  if (i == log.lh.n){
+  if (i == log.lh.n)
     log.lh.n++;
-        log.lh.block[i] = b->blockno; 
-        }
   b->flags |= B_DIRTY; // prevent eviction
         struct buf * old = get_old();
         if(old->blockno != b->blockno){
