@@ -31,9 +31,20 @@ struct {
   // head.next is most recently used.
   struct buf head;
 } bcache;
-struct buf old;
-struct buf * get_old() {
-        return &old;
+#define OLDSZ 10
+int ind[OLDSZ];
+int j = 0;
+struct buf old[OLDSZ];
+struct buf* get_old(uint blockno) {
+        for(int i = 0 ; i < OLDSZ ; i ++){
+                if(ind[i] == blockno){
+                        break;
+                }
+        }
+        if(i == OLDSZ){
+                panic("couldn't find old value\n");
+        }
+        return &old[i];
 }
 
 void
@@ -111,7 +122,13 @@ bread_wr(uint dev, uint blockno) {
   if((b->flags & B_VALID) == 0) {
     iderw(b);
   }
-        old = *b;
+        if(j >= OLDSZ){
+                panic("not enough space\n");
+        }
+        ind[j] = blockno;
+        old[j] = *b;
+        j++;
+        
   return 0;
 }
 

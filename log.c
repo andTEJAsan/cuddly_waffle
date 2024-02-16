@@ -206,7 +206,7 @@ log_write(struct buf *b)
   if (i == log.lh.n)
     log.lh.n++;
   b->flags |= B_DIRTY; // prevent eviction
-        struct buf * old = get_old();
+        struct buf * old = get_old(b->blockno);
         if(old->blockno != b->blockno){
                 panic("bread_wr wasnt called just before calling \n");
         }
