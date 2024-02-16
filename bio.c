@@ -37,14 +37,19 @@ int j = 0;
 struct buf old[OLDSZ];
 struct buf* get_old(uint blockno) {
         int i;
-        for(i = 0 ; i < OLDSZ ; i ++){
+        if(j == 0){
+                cprintf("not even once bread_wr clalen\n");
+                return NULL;
+        }
+        for(i = j-1 ; i >= 0 ; i--){
                 if(ind[i] == blockno){
                         break;
                 }
         }
-        if(i == OLDSZ){
-                cprintf("j = %d\n", j);
-                panic("couldn't find old value\n");
+        if(i == -1){
+                cprintf("Wasn't \n");
+                cprintf("%d\n", j);
+                return NULL;
         }
         return &old[i];
 }
