@@ -90,7 +90,7 @@ install_trans(void)
     //struct buf *lbuf = bread(log.dev, log.start+tail+1); // read log block
                 // This must be in the cache right now.
     struct buf *dbuf = bread(log.dev, log.lh.block[tail]); // read dst
-        if(dbuf->flags & (B_DIRTY|B_VALID) != (B_DIRTY|B_VALID)){
+        if((dbuf->flags & (B_DIRTY|B_VALID)) != (B_DIRTY|B_VALID)){
                         panic("Fuck what the fuck stupid ass goddamnit\n");
                 }
     //memmove(dbuf->data, lbuf->data, BSIZE);  // copy block to dst
