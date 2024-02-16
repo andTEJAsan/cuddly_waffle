@@ -36,7 +36,8 @@ int ind[OLDSZ];
 int j = 0;
 struct buf old[OLDSZ];
 struct buf* get_old(uint blockno) {
-        for(int i = 0 ; i < OLDSZ ; i ++){
+        int i;
+        for(i = 0 ; i < OLDSZ ; i ++){
                 if(ind[i] == blockno){
                         break;
                 }
