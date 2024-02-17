@@ -197,7 +197,6 @@ log_write(struct buf *b)
 
   if (log.lh.n >= LOGSIZE || log.lh.n >= log.size - 1)
     panic("too big a transaction");
-
   for (i = 0; i < log.lh.n; i++) {
     if (log.lh.block[i] == b->blockno)   // log absorbtion
       break;
@@ -205,7 +204,9 @@ log_write(struct buf *b)
   log.lh.block[i] = b->blockno;
   if (i == log.lh.n)
     log.lh.n++;
+
   b->flags |= B_DIRTY; // prevent eviction
+  	cprintf("log_write called for %d\n", b->blockno);
         struct buf * old = get_old(b->blockno);
         if(old == NULL){
                 old = bread(log.dev, b->blockno);

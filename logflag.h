@@ -1,4 +1,4 @@
-#define LOG_FLAG 0
+#define LOG_FLAG 2
 
 #define PANIC_1 (LOG_FLAG==1)
 #define PANIC_2 (LOG_FLAG==2)

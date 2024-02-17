@@ -31,28 +31,29 @@ struct {
   // head.next is most recently used.
   struct buf head;
 } bcache;
-#define OLDSZ 10
-#define NULL (void *) 0
-int ind[OLDSZ];
-int j = 0;
-struct buf old[OLDSZ];
-struct buf* get_old(uint blockno) {
-        int i;
-        if(j == 0){
-                cprintf("not even once bread_wr clalen\n");
-                return NULL;
+struct buf und[LOGSIZE];
+int size = 0;
+int t = 0;
+void add_undocache(struct buf * b)
+{
+        und[t] = *b;
+        t = (t + 1) % LOGSIZE;
+        if(size < LOGSIZE){
+                size++;
+        } else if (size > LOGSIZE) {
+                panic("how did this happen\n");
+        } else {
         }
-        for(i = j-1 ; i >= 0 ; i--){
-                if(ind[i] == blockno){
-                        break;
+}
+
+struct buf* get_old(uint blockno) {
+        for(int i = (t - 1) % LOGSIZE; i != (t - size - 1) %LOGSIZE; i = (i-1)%LOGSIZE)
+        {
+                if(und[i].blockno == blockno){
+                        return &und[i];
                 }
         }
-        if(i == -1){
-                cprintf("Wasn't \n");
-                cprintf("%d\n", j);
-                return NULL;
-        }
-        return &old[i];
+        return NULL;
 }
 
 void
@@ -126,18 +127,13 @@ struct buf*
 bread_wr(uint dev, uint blockno) {
   // IMPLEMENT YOUR CODE HERE
   struct buf *b;
+  cprintf("bread_wr called %d times for blockno = %d\n",j+1, blockno);
   b = bget(dev, blockno);
   if((b->flags & B_VALID) == 0) {
     iderw(b);
   }
-        if(j >= OLDSZ){
-                panic("not enough space\n");
-        }
-        ind[j] = blockno;
-        old[j] = *b;
-        j++;
-        
-  return 0;
+  add_undocache(b);
+  return b;
 }
 
 // Release a buffer.
