@@ -41,17 +41,21 @@ void add_undocache(struct buf * b)
         if(size < LOGSIZE){
                 size++;
         } else if (size > LOGSIZE) {
-                panic("how did this happen\n");
+                cprintf("how did this happen\n");
         } else {
         }
 }
 
 struct buf* get_old(uint blockno) {
+	int ctr = 0;
         for(int i = (t - 1) % LOGSIZE; i != (t - size - 1) %LOGSIZE; i = (i-1)%LOGSIZE)
         {
                 if(und[i].blockno == blockno){
+//			cprintf("found in %dth iteration\n", ctr);
+//			cprintf("undsize = %d\n",size);
                         return &und[i];
                 }
+		ctr++;
         }
         return NULL;
 }
@@ -127,7 +131,6 @@ struct buf*
 bread_wr(uint dev, uint blockno) {
   // IMPLEMENT YOUR CODE HERE
   struct buf *b;
-  cprintf("bread_wr called %d times for blockno = %d\n",j+1, blockno);
   b = bget(dev, blockno);
   if((b->flags & B_VALID) == 0) {
     iderw(b);

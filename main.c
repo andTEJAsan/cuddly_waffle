@@ -10,7 +10,6 @@
 #include "logflag.h"
 
 extern char end[]; // first address after kernel loaded from ELF file
-
 static inline void 
 log_test(void) {
   struct file* gtxt;

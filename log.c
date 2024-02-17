@@ -91,7 +91,7 @@ install_trans(void)
                 // This must be in the cache right now.
     struct buf *dbuf = bread(log.dev, log.lh.block[tail]); // read dst
         if((dbuf->flags & (B_DIRTY|B_VALID)) != (B_DIRTY|B_VALID)){
-                        panic("Fuck what the fuck stupid ass goddamnit\n");
+		cprintf("Flag issue\n");
                 }
     //memmove(dbuf->data, lbuf->data, BSIZE);  // copy block to dst
     bwrite(dbuf);  // write dst to disk
@@ -206,13 +206,13 @@ log_write(struct buf *b)
     log.lh.n++;
 
   b->flags |= B_DIRTY; // prevent eviction
-  	cprintf("log_write called for %d\n", b->blockno);
         struct buf * old = get_old(b->blockno);
         if(old == NULL){
+		cprintf("disk was fetched");
                 old = bread(log.dev, b->blockno);
         }
         if(old->blockno != b->blockno){
-                panic("bread_wr wasnt called just before calling \n");
+                cprintf("block no dont match");
         }
         struct buf * to = bread(log.dev, log.start + i + 1);
         memmove(to->data, old->data, BSIZE);
